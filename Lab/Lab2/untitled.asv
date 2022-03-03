@@ -1,0 +1,31 @@
+A = double(imread('_MG_7735.JPG'))/255;
+B = double(imread('_MG_7737.JPG'))/255;
+Bd = imtranslate(B,[20, -20]);
+Am = (A+Bd)/2;
+
+% histogram(rgb2gray(Am))
+
+Ac0 = imadjust(Am, [0 0 0; 0.3 0.3 0.3]);
+
+g_Am = gpuArray(Am);
+g_Ac = arrayfun(@(x) (3*x).^2, g_Am);
+Ac1 = gather(g_Ac);
+
+[H,S,L] = convertToHSL(Am);
+L2 = log(L);
+
+histogram(L2,'Normalization','probability','EdgeColor','none');
+xlabel('Adjusted lightness (a.u.)')
+ylabel('Normalized pixel count')
+
+blacklevel = -3;
+L2 = rescale(L2,"InputMin",blacklevel);
+imshow(L2,[0 1]);
+saturation = 0.9;
+S2 = saturation*S;
+Ac3 = convertFromHSL(H,S2,L2);
+
+Ac4 = imlocalbrighten(Ac, 0.8);
+
+
+montage({Ac0, Ac1, Ac2, A})
